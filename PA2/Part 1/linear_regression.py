@@ -23,7 +23,9 @@ def mean_absolute_error(w, X, y):
     #####################################################
     # TODO 1: Fill in your code here #
     #####################################################
-    err = None
+    y_dash = np.dot(w, X.T)
+    err = np.sum(np.absolute(y_dash - y)) / X.shape[0]
+#    print (type(err))
     return err
 
 ###### Q1.2 ######
@@ -39,7 +41,7 @@ def linear_regression_noreg(X, y):
   #####################################################
   #	TODO 2: Fill in your code here #
   #####################################################		
-  w = None
+  w = np.dot(np.dot(np.linalg.inv(np.dot(X.T, X)), X.T), y)
   return w
 
 ###### Q1.3 ######
@@ -55,7 +57,28 @@ def linear_regression_invertible(X, y):
     #####################################################
     # TODO 3: Fill in your code here #
     #####################################################
-    w = None
+#    if (X_evalue_abs < (10 ** (-5))):
+#        print ("matrix is non invertible")
+#    if (np.less(X_evalue_abs, (10 ** (-5)))):
+#        print ("matrix is non invertible")
+    
+#    X_covariance = np.dot(X.T, X)
+    X_covariance = np.matmul(X.T, X)
+    X_evalue = np.linalg.eigvals(X_covariance)
+    print (X_evalue)
+    X_evalue_abs = np.absolute(X_evalue)
+    X_smallest_evalue_abs_val = np.min(X_evalue_abs)
+    print(X_smallest_evalue_abs_val)
+    while X_smallest_evalue_abs_val < 0.00001:
+        X_covariance += 0.1 * np.identity(X_covariance.shape[0])
+        X_evalue = np.linalg.eigvals(X_covariance)
+        X_evalue_abs = np.absolute(X_evalue)
+        X_smallest_evalue_abs_val = np.min(X_evalue_abs)
+        print(X_smallest_evalue_abs_val)
+    print (X_evalue)   
+    x2 = np.linalg.inv(X_covariance)
+    x3 = np.matmul(x2, X.T)
+    w = np.matmul(x3, y)
     return w
 
 
@@ -73,7 +96,8 @@ def regularized_linear_regression(X, y, lambd):
   #####################################################
   # TODO 4: Fill in your code here #
   #####################################################		
-    w = None
+#    w = linear_regression_invertible(X, y)
+    w = np.linalg.lstsq(np.dot(X.T, X) + lambd * np.identity(X.shape[1]), np.dot(X.T, y))[0]
     return w
 
 ###### Q1.5 ######
@@ -90,8 +114,15 @@ def tune_lambda(Xtrain, ytrain, Xval, yval):
     """
     #####################################################
     # TODO 5: Fill in your code here #
-    #####################################################		
-    bestlambda = None
+    #####################################################
+    best_err = 100
+    for exp in range(-19, 20):		
+        lambd = 10 ** exp
+        w = regularized_linear_regression(Xtrain, ytrain, lambd)
+        err = mean_absolute_error(w, Xval, yval)
+        if (err < best_err):
+            bestlambda = lambd
+            best_err = err
     return bestlambda
     
 
@@ -107,8 +138,12 @@ def mapping_data(X, power):
     """
     #####################################################
     # TODO 6: Fill in your code here #
-    #####################################################		
+    #####################################################
+    new_X = np.array([[] for i in range(X.shape[0])])
+    for p in range(1, power + 1):
+       values = X ** p
+       new_X = np.insert(new_X, [X.shape[1] * (p - 1)], values, axis=1)
     
-    return X
+    return new_X
 
 
