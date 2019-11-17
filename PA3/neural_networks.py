@@ -43,7 +43,10 @@ class linear_layer:
         # TODO: Use np.random.normal() with mean as 0 and standard deviation as 0.1
         # W Shape (input_D, output_D), b shape (1, output_D)
         ###############################################################################################
-        raise NotImplementedError("Not Implemented function: __init__, class: linear_layer")
+        self.params['W'] = np.random.normal(loc = 0, scale = 0.1, size = (input_D, output_D))
+        self.params['b'] = np.random.normal(loc = 0, scale = 0.1, size = (1, output_D))
+#        print (self.params['W'].shape, self.params['b'].shape)
+#        raise NotImplementedError("Not Implemented function: __init__, class: linear_layer")
 
 
         self.gradient = dict()
@@ -52,7 +55,9 @@ class linear_layer:
         # TODO: Initialize gradients with zeros
         # Note: Shape of gradient is same as the respective variables
         ###############################################################################################
-        raise NotImplementedError("Not Implemented function: __init__, class: linear_layer")
+        self.gradient['W'] = np.zeros(shape = (input_D, output_D))
+        self.gradient['b'] = np.zeros(shape = (1, output_D))
+#        raise NotImplementedError("Not Implemented function: __init__, class: linear_layer")
 
     def forward(self, X):
 
@@ -70,7 +75,10 @@ class linear_layer:
         ################################################################################
         # TODO: Implement the linear forward pass. Store the result in forward_output  #
         ################################################################################
-        raise NotImplementedError("Not Implemented function: forward, class: linear_layer")
+#        print (X.shape)
+        forward_output = np.dot(X, self.params['W']) + self.params['b']
+#        print (forward_output.shape)
+#        raise NotImplementedError("Not Implemented function: forward, class: linear_layer")
         return forward_output
 
     def backward(self, X, grad):
@@ -97,7 +105,17 @@ class linear_layer:
         # backward_output = ? (N-by-input_D numpy array, the gradient of the mini-batch loss w.r.t. X)
         # only return backward_output, but need to compute self.gradient['W'] and self.gradient['b']
         #################################################################################################
-        raise NotImplementedError("Not Implemented function: backward, class: linear_layer")
+        
+#        print ('x', X.shape)
+#        print ('grad', grad.shape)
+        self.gradient['W'] = np.dot(X.T, grad) 
+#        print ('gradW',self.gradient['W'].shape)
+        self.gradient['b'] = np.sum(grad, axis = 0, keepdims = True) 
+#        print ('gradB', self.gradient['b'].shape)
+#        backward_output = (np.dot(X, self.gradient['W']) + self.gradient['b']) / X.shape[0]
+        backward_output = np.dot(grad, self.params['W'].T)
+#        print ('back op', backward_output.shape)
+#        raise NotImplementedError("Not Implemented function: backward, class: linear_layer")
         return backward_output
 
 
@@ -132,7 +150,10 @@ class relu:
         ################################################################################
         # TODO: Implement the relu forward pass. Store the result in forward_output    #
         ################################################################################
-        raise NotImplementedError("Not Implemented function: forward, class: relu")
+#        raise NotImplementedError("Not Implemented function: forward, class: relu")
+#        forward_output = np.maximum(0, X)
+        self.mask = (X > 0)
+        forward_output = X * self.mask
         return forward_output
 
     def backward(self, X, grad):
@@ -153,7 +174,15 @@ class relu:
         # TODO: Implement the backward pass
         # You can use the mask created in the forward step.
         ####################################################################################################
-        raise NotImplementedError("Not Implemented function: backward, class: relu")
+#        raise NotImplementedError("Not Implemented function: backward, class: relu")
+#        drelu = self.mask.astype(int)
+#        backward_output = grads * drelu
+#        print (backward_output.shape)
+#        self.mask = (X > 0)
+#        forward_output = X * self.mask
+        backward_output = np.array(grad, copy = True)
+        backward_output[X <= 0] = 0
+        assert (backward_output.shape == X.shape)
         return backward_output
 
 
@@ -175,8 +204,9 @@ class tanh:
         # TODO: Implement the tanh forward pass. Store the result in forward_output
         # You can use np.tanh()
         ################################################################################
-        raise NotImplementedError("Not Implemented function: forward, class: tanh")
-        return forward_output
+#        raise NotImplementedError("Not Implemented function: forward, class: tanh")
+        self.forward_output = 2 / (1 + np.exp(-2 * X)) - 1
+        return self.forward_output
 
     def backward(self, X, grad):
 
@@ -193,7 +223,9 @@ class tanh:
         # TODO: Implement the backward pass
         # Derivative of tanh is (1 - tanh^2)
         ####################################################################################################
-        raise NotImplementedError("Not Implemented function: backward, class: tanh")
+        #raise NotImplementedError("Not Implemented function: backward, class: tanh")
+        dtanh = 1 - (self.forward_output ** 2)
+        backward_output = grad * dtanh
         return backward_output
 
 
@@ -255,7 +287,8 @@ class dropout:
         # You can use the mask created in the forward step
         ####################################################################################################
 
-        raise NotImplementedError("Not Implemented function: backward, class: dropout")
+        #raise NotImplementedError("Not Implemented function: backward, class: dropout")
+        backward_output = grad * self.mask
         return backward_output
 
 
@@ -293,8 +326,12 @@ def miniBatchStochasticGradientDescent(model, momentum, _lambda, _alpha, _learni
                     # m = alpha * m - learning_rate * g (Check add_momentum() function in utils file)
                     # And update model parameter
                     #################################################################################
-
-                    raise NotImplementedError("Not Implemented function: miniBatchGradientDescent")
+#                    print (momentum)
+                    momentum[str(module_name + "_" + key)] = _alpha * momentum[str(module_name + "_" + key)] - _learning_rate * g
+#                    print (model.items())
+#                    module.params['W'] = module.params['W'] + momentum
+                    module.params[key] += momentum[str(module_name + "_" + key)]
+#                    raise NotImplementedError("Not Implemented function: miniBatchGradientDescent")
                     
 
                 else:
@@ -302,8 +339,8 @@ def miniBatchStochasticGradientDescent(model, momentum, _lambda, _alpha, _learni
                     #################################################################################
                     # TODO: update model parameter without momentum
                     #################################################################################
-
-                    raise NotImplementedError("Not Implemented function: miniBatchGradientDescent")
+                    module.params[key] = module.params[key] - _learning_rate * g
+#                    raise NotImplementedError("Not Implemented function: miniBatchGradientDescent")
 
     return model
 
@@ -410,8 +447,10 @@ def main(main_params, optimization_type="minibatch_sgd"):
             # We have given the first and last backward calls
             # Do not modify them.
             ######################################################################################
-            
-            raise NotImplementedError("Not Implemented BACKWARD PASS in main()")
+            grad_d1 = model['L2'].backward(d1, grad_a2)
+            grad_h1 = model['drop1'].backward(h1, grad_d1)
+            grad_a1 = model['nonlinear1'].backward(a1, grad_h1)
+#            raise NotImplementedError("Not Implemented BACKWARD PASS in main()")
 
             ######################################################################################
             # NOTE: DO NOT MODIFY CODE BELOW THIS, until next TODO
@@ -432,8 +471,12 @@ def main(main_params, optimization_type="minibatch_sgd"):
             # Check above forward code
             # Make sure to keep train as False
             ######################################################################################
-            
-            raise NotImplementedError("Not Implemented COMPUTING TRAINING ACCURACY in main()")
+            a1 = model['L1'].forward(x)
+            h1 = model['nonlinear1'].forward(a1)
+            d1 = model['drop1'].forward(h1, is_train = False)
+            a2 = model['L2'].forward(d1)
+            loss = model['loss'].forward(a2, y)
+#            raise NotImplementedError("Not Implemented COMPUTING TRAINING ACCURACY in main()")
 
             ######################################################################################
             # NOTE: DO NOT MODIFY CODE BELOW THIS, until next TODO
@@ -463,8 +506,12 @@ def main(main_params, optimization_type="minibatch_sgd"):
             # Check above forward code
             # Make sure to keep train as False
             ######################################################################################
-            
-            raise NotImplementedError("Not Implemented COMPUTING VALIDATION ACCURACY in main()")
+            a1 = model['L1'].forward(x)
+            h1 = model['nonlinear1'].forward(a1)
+            d1 = model['drop1'].forward(h1, is_train = False)
+            a2 = model['L2'].forward(d1)
+            loss = model['loss'].forward(a2, y)
+#            raise NotImplementedError("Not Implemented COMPUTING VALIDATION ACCURACY in main()")
 
             
             ######################################################################################
@@ -508,7 +555,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--random_seed', default=42)
     parser.add_argument('--learning_rate', default=0.01)
-    parser.add_argument('--alpha', default=0.0)
+    parser.add_argument('--alpha', default=0.01)
     parser.add_argument('--lambda', default=0.0)
     parser.add_argument('--dropout_rate', default=0.0)
     parser.add_argument('--num_epoch', default=10)
